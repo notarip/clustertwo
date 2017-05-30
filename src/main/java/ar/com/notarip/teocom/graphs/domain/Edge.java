@@ -16,24 +16,36 @@ public class Edge {
 	@Id
     @GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
+
+	private Long source;
 	
-	@ManyToOne
-	@JoinColumn(name="source")
-	private Node source;
+	private Long target;
 	
-	@ManyToOne
-	@JoinColumn(name="target")
-	private Node target;
-	
-	@OneToOne
-	@JoinColumn(name="dataset_id")
-	private Data data;
 	
 	private String type;
 	
 	@Transient
 	private String interval;
+
 	
+
+
+	public Long getSource() {
+		return source;
+	}
+
+	public void setSource(Long source) {
+		this.source = source;
+	}
+
+	public Long getTarget() {
+		return target;
+	}
+
+	public void setTarget(Long target) {
+		this.target = target;
+	}
+
 	public Edge() {
 	}
 	
@@ -45,29 +57,6 @@ public class Edge {
 		this.id = id;
 	}
 
-	public Node getSource() {
-		return source;
-	}
-
-	public void setSource(Node source) {
-		this.source = source;
-	}
-
-	public Node getTarget() {
-		return target;
-	}
-
-	public void setTarget(Node target) {
-		this.target = target;
-	}
-
-	public Data getData() {
-		return data;
-	}
-
-	public void setData(Data data) {
-		this.data = data;
-	}
 
 	public String getType() {
 		return type;
@@ -85,14 +74,14 @@ public class Edge {
 		this.interval = interval;
 	}
 
-	public Edge (Node source, Node target, Data data, String type, String interval){
-		this.source = source;
-		this.target = target;
-		this.data = data;
-		this.type = type;
-		this.interval = interval;
-	}
 	
+	public Edge(Long countryId, Long countryId2) {
+	
+		this.source = countryId;
+		this.target = countryId2;
+		
+	}
+
 	@Override
 	public String toString() {
 		return source + " -> " + target;

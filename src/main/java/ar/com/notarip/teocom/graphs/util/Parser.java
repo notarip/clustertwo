@@ -39,10 +39,10 @@ public class Parser {
 		}
 
 		Graph graph = new Graph();
-
-		graph.setName(name);
-		graph.setType(type);
-		graph.setEdges(edges);
+//
+//		graph.setName(name);
+//		graph.setType(type);
+//		graph.setEdges(edges);
 
 		return graph;
 	}

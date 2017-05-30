@@ -8,7 +8,6 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-@Entity(name="country")
 public class Node {
 
 	@Id

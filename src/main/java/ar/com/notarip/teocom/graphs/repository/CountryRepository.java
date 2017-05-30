@@ -9,5 +9,6 @@ import ar.com.notarip.teocom.graphs.domain.Country;
 public interface CountryRepository extends CrudRepository<Country, Long>{
 
 	List<Country> findAll();
+	Country findById(Long id);
 	
 }
