@@ -52,7 +52,15 @@ public class Application implements CommandLineRunner {
 	@Override
 	public void run(String... arg0) throws Exception {
     	
-    	List<String> datasets = new ArrayList<String>();
+    	createGraph(arg0);
+    	
+		//gephi.getGraphTest();
+	}
+	
+	private void createGraph(String... arg0){
+		
+		
+		List<String> datasets = new ArrayList<String>();
     	String year = null;
     	int i = 0;
     	try{
@@ -76,8 +84,8 @@ public class Application implements CommandLineRunner {
     	
     	//createAdyansencyMatrix(datasets, year);
     	gephi.getGraph();
-    	
-    	
+		
+		
 	}
 
 	private void createAdyansencyMatrix(List<String> datasets, String year) {
