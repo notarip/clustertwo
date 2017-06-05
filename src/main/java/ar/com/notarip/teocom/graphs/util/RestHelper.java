@@ -1,4 +1,4 @@
-package ar.com.notarip.teocom.graphs;
+package ar.com.notarip.teocom.graphs.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

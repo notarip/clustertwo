@@ -18,21 +18,15 @@ import ar.com.notarip.teocom.graphs.domain.Score;
 import ar.com.notarip.teocom.graphs.repository.CountryRepository;
 import ar.com.notarip.teocom.graphs.repository.DataSetRepository;
 import ar.com.notarip.teocom.graphs.repository.EdgeRepository;
-import ar.com.notarip.teocom.graphs.repository.GraphRepository;
 import ar.com.notarip.teocom.graphs.repository.ScoreRepository;
 import ar.com.notarip.teocom.graphs.util.GephiHelper;
+import ar.com.notarip.teocom.graphs.util.RestHelper;
 
 @SpringBootApplication
 public class Application implements CommandLineRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(Application.class);
 
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-
-	@Autowired
-	private GraphRepository graphRepository;
 
 	@Autowired
 	private CountryRepository countryRepo;
@@ -48,6 +42,11 @@ public class Application implements CommandLineRunner {
 	
 	@Autowired
 	private GephiHelper gephi;
+	
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+	
 	
 	@Override
 	public void run(String... arg0) throws Exception {
@@ -82,7 +81,7 @@ public class Application implements CommandLineRunner {
 		}
     	
     	
-    	//createAdyansencyMatrix(datasets, year);
+    	createAdyansencyMatrix(datasets, year);
     	gephi.getGraph();
 		
 		
