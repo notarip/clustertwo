@@ -56,7 +56,7 @@ public class Application implements CommandLineRunner {
 		//gephi.getGraphTest();
 	}
 	
-	private void createGraph(String... arg0){
+	private void createGraph(String... arg0) throws Exception{
 		
 		
 		List<String> datasets = new ArrayList<String>();
@@ -78,6 +78,7 @@ public class Application implements CommandLineRunner {
 	    	}
     	}catch (Exception e) {
 			System.out.println("error en los parametros de entrada -d [datasets by comma] -y [year]");
+			throw e;
 		}
     	
     	
