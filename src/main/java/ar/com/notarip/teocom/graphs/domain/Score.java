@@ -18,7 +18,7 @@ public class Score {
 
 	private double score;
 
-	private int year;
+	private Long year;
 
 	public Score() {
 		// TODO Auto-generated constructor stub
@@ -56,11 +56,11 @@ public class Score {
 		this.score = score;
 	}
 
-	public int getYear() {
+	public Long getYear() {
 		return year;
 	}
 
-	public void setYear(int year) {
+	public void setYear(Long year) {
 		this.year = year;
 	}
 

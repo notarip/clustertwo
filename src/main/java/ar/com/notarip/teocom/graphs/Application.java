@@ -27,105 +27,140 @@ public class Application implements CommandLineRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(Application.class);
 
-
 	@Autowired
 	private CountryRepository countryRepo;
 
 	@Autowired
 	private ScoreRepository scoreRepo;
-	
+
 	@Autowired
 	private DataSetRepository datasetRepo;
-	
+
 	@Autowired
 	private EdgeRepository edgeRepo;
-	
+
 	@Autowired
 	private GephiHelper gephi;
-	
+
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
-	
-	
+
 	@Override
 	public void run(String... arg0) throws Exception {
-    	
-    	createGraph(arg0);
-    	
-		//gephi.getGraphTest();
+
+		createGraph(arg0);
+
+		// gephi.getGraphTest();
 	}
-	
-	private void createGraph(String... arg0) throws Exception{
-		
-		
+
+	private void createGraph(String... arg0) throws Exception {
+
 		List<String> datasets = new ArrayList<String>();
-    	String year = null;
-    	int i = 0;
-    	try{
-	    	for (String param : arg0) {
-				
-	    		if (param.equals("-d")){
-	    			String datas = arg0[i+1];
-	    			String[] split = datas.split(",");
-	    			datasets.addAll(Arrays.asList(split));
-	    		}
-	    		if(param.equals("-y")){
-	    			year = arg0[i+1];
-	    			
-	    		}
-	    		i++;
-	    	}
-    	}catch (Exception e) {
-			System.out.println("error en los parametros de entrada -d [datasets by comma] -y [year]");
+		String year = null;
+		Boolean force = Boolean.FALSE;
+		int i = 0;
+		try {
+			for (String param : arg0) {
+
+				if (param.equals("-d")) {
+					String datas = arg0[i + 1];
+					String[] split = datas.split(",");
+					datasets.addAll(Arrays.asList(split));
+				}
+				if (param.equals("-y")) {
+					year = arg0[i + 1];
+
+				}
+				if (param.equals("-f")) {
+					force = Boolean.TRUE;
+
+				}
+				i++;
+			}
+		} catch (Exception e) {
+			log.error("error en los parametros de entrada -d [datasets by comma] -y [year] [-f]");
 			throw e;
 		}
-    	
-    	
-    	createAdyansencyMatrix(datasets, year);
-    	gephi.getGraph();
-		
-		
-	}
 
-	private void createAdyansencyMatrix(List<String> datasets, String year) {
-
-		String msg = "creating adyancense matrix with datasets %s and year %s";
-		msg = String.format(msg, datasets.toString(), year);
-		log.info(msg);
-		
-		edgeRepo.deleteAll();
-		
-		for (String datasetId : datasets) {
-
-			Long dataSetId = Long.valueOf(datasetId);
-			Integer iYear = Integer.valueOf(year);
-			DataSet dataSet = datasetRepo.findById(dataSetId);
-			double delta = (dataSet.getMax() - dataSet.getMin())/100*dataSet.getPercent();
+		if (!datasets.isEmpty() && !year.isEmpty()) {
 			
-			List<Score> scores = scoreRepo.findByDatasetIdAndYear(dataSetId, iYear);
-			for (Score score : scores) {
-				double from = score.getScore()- delta;
-				double to = score.getScore() + delta;
-				List<Score> scoresRelated = scoreRepo.findByScoreBetweenFromToAndDatasourceIdAndYear(from, to, dataSetId, iYear);
-				createEdges(score, scoresRelated);
-				
-			}
+			List<Long> datas = listToLong(datasets);
+			Long lYear = Long.valueOf(year);
+
+			createAdyansencyMatrix(datas, lYear, force);
+			gephi.generateGraph(datas, lYear);
+			
+		} else {
+			
+			log.error("error en los parametros de entrada -d [datasets by comma] -y [year] [-f]");
+			
 		}
-		
-		log.info("adyancense matrix created");
 
 	}
 
-	private void createEdges(Score score, List<Score> scoresRelated) {
+	private List<Long> listToLong(List<String> datasets) {
+
+		List<Long> datas = new ArrayList<>();
+		datasets.forEach(s -> {
+			datas.add(Long.valueOf(s));
+			});
+		return datas;
 		
+	}
+
+	private void createAdyansencyMatrix(List<Long> datasets, Long year, Boolean force) {
+
+		if (!datasets.isEmpty()) {
+
+			String msg = "creating adyancense matrix with datasets %s and year %s";
+			msg = String.format(msg, datasets.toString(), year);
+			log.info(msg);
+			
+			if(force) 
+				edgeRepo.deleteByDataSetIdInAndYear(datasets, year);
+
+			for (Long datasetId : datasets) {
+
+				Long dataSetId = Long.valueOf(datasetId);
+				
+				DataSet dataSet = datasetRepo.findById(dataSetId);
+				double delta = (dataSet.getMax() - dataSet.getMin()) / 100 * dataSet.getPercent();
+
+				List<Score> scores = scoreRepo.findByDatasetIdAndYear(dataSetId, year);
+				for (Score score : scores) {
+					double from = score.getScore() - delta;
+					double to = score.getScore() + delta;
+					List<Score> scoresRelated = scoreRepo.findByScoreBetweenFromToAndDatasourceIdAndYear(from, to,
+							dataSetId, year);
+					createEdges(score, scoresRelated, dataSetId, year);
+
+				}
+			}
+			log.info("adyancense matrix created");
+		}
+
+	}
+
+	private void createEdges(Score score, List<Score> scoresRelated, Long dataSetId, Long year) {
+
 		for (Score score2 : scoresRelated) {
+
+			Long source = score.getCountryId();
+			Long target = score2.getCountryId();
+			Long lYear= Long.valueOf(year);
 			
-			if(score.getCountryId() != score2.getCountryId()){
-			
-				Edge edge = new Edge(score.getCountryId(), score2.getCountryId());
-			
-				edgeRepo.save(edge);			
+			if (source != target) {
+
+				Edge edge = new Edge(source, target);
+				edge.setDataSetId(dataSetId);
+				
+				edge.setYear(lYear);
+				
+				Edge existentEdge = edgeRepo.findBySourceAndTargetAndDataSetIdAndYear(source, target, dataSetId, lYear);
+				
+				if(existentEdge == null)
+					edgeRepo.save(edge);
 			}
 		}
 	}
@@ -151,25 +186,5 @@ public class Application implements CommandLineRunner {
 
 	}
 
-	// Path path = Paths.get("src/main/resources/graphs");
-	// Stream<Path> files = Parser.getfiles(path);
-
-	/*
-	 * files.forEach(file -> { Graph graph; try { graph = Parser.proccess(file);
-	 * UndirectedGraph graph2 = GephiHelper.getGraph(graph); } catch
-	 * (IOException e) { // TODO Auto-generated catch block e.printStackTrace();
-	 * }
-	 * 
-	 * });
-	 * 
-	 */
-
-	// Node node = nodeRepository.findById(10L);
-	// List<Edge> findBySource =
-	// node.getEdgesOut();//edgeRepository.findBySource(10L);
-
-	// for (Edge edge : findBySource) {
-	// log.info(edge.toString());
-	// }
 
 }

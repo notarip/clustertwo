@@ -10,9 +10,10 @@ import ar.com.notarip.teocom.graphs.domain.Score;
 
 public interface ScoreRepository extends CrudRepository<Score, Long>{
 	
-	List<Score> findByDatasetIdAndYear(Long datasetId, int year);
+	List<Score> findByDatasetIdAndYear(Long datasetId, Long year);
 	
+
 	@Query("select s from scores s where s.score between :from and :to and s.datasetId = :dataset and s.year = :year")
-	List<Score> findByScoreBetweenFromToAndDatasourceIdAndYear(@Param("from") double from, @Param("to") double to, @Param("dataset") Long dataset, @Param("year") int year);
+	List<Score> findByScoreBetweenFromToAndDatasourceIdAndYear(@Param("from") double from, @Param("to") double to, @Param("dataset") Long dataset, @Param("year") long year);
 
 }

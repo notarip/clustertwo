@@ -1,12 +1,10 @@
 package ar.com.notarip.teocom.graphs.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 
@@ -26,10 +24,12 @@ public class Edge {
 	
 	@Transient
 	private String interval;
-
 	
+	@Column(name="dataset_id")
+	private Long dataSetId;
 
-
+	private Long year;
+	
 	public Long getSource() {
 		return source;
 	}
@@ -85,6 +85,22 @@ public class Edge {
 	@Override
 	public String toString() {
 		return source + " -> " + target;
+	}
+
+	public Long getDataSetId() {
+		return dataSetId;
+	}
+
+	public void setDataSetId(Long dataSetId) {
+		this.dataSetId = dataSetId;
+	}
+
+	public Long getYear() {
+		return year;
+	}
+
+	public void setYear(Long year) {
+		this.year = year;
 	}
 	
 	

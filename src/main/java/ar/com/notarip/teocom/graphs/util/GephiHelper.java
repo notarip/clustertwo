@@ -1,6 +1,5 @@
 package ar.com.notarip.teocom.graphs.util;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -25,8 +24,6 @@ import org.gephi.io.exporter.api.ExportController;
 import org.gephi.io.exporter.spi.GraphExporter;
 import org.gephi.io.generator.plugin.RandomGraph;
 import org.gephi.io.importer.api.Container;
-import org.gephi.io.importer.api.ContainerLoader;
-import org.gephi.io.importer.api.EdgeDirectionDefault;
 import org.gephi.io.importer.api.ImportController;
 import org.gephi.io.processor.plugin.DefaultProcessor;
 import org.gephi.layout.plugin.AutoLayout;
@@ -38,11 +35,12 @@ import org.gephi.layout.plugin.fruchterman.FruchtermanReingoldBuilder;
 import org.gephi.preview.api.PreviewController;
 import org.gephi.preview.api.PreviewModel;
 import org.gephi.preview.api.PreviewProperty;
-import org.gephi.preview.types.EdgeColor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,14 +54,18 @@ public class GephiHelper {
 
 	private static final String REGION = "region";
 
+	private static final Logger log = LoggerFactory.getLogger(GephiHelper.class);
+
 	@Autowired
 	CountryRepository countryRepo;
 
 	@Autowired
 	EdgeRepository edgeRepo;
 
-	public UndirectedGraph getGraph() {
+	public UndirectedGraph generateGraph(List<Long> datasets, Long year) {
 
+		log.info("generating graph...");
+		
 		ProjectController pc = Lookup.getDefault().lookup(ProjectController.class);
 		pc.newProject();
 		Workspace workspace = pc.getCurrentWorkspace();
@@ -73,13 +75,14 @@ public class GephiHelper {
 
 
 		Container container = Lookup.getDefault().lookup(Container.Factory.class).newContainer();
-		List<Edge> edges = edgeRepo.findAll();
+		
+		List<Edge> edges = edgeRepo.findByDataSetIdInAndYear(datasets, year);
 
 		UndirectedGraph undirectedGraph = loadGraph(graphModel, edges);
 
 		appearance(graphModel, undirectedGraph);
 		
-		 PreviewModel model = Lookup.getDefault().lookup(PreviewController.class).getModel();
+		PreviewModel model = Lookup.getDefault().lookup(PreviewController.class).getModel();
 		model.getProperties().putValue(PreviewProperty.SHOW_NODE_LABELS, Boolean.TRUE);
 		//model.getProperties().putValue(PreviewProperty.EDGE_COLOR, new EdgeColor(Color.GRAY));
 		model.getProperties().putValue(PreviewProperty.EDGE_THICKNESS, new Float(0.1f));
@@ -95,15 +98,19 @@ public class GephiHelper {
 		autoLayout.setGraphModel(graphModel);
 
 		autoLayout.addLayout(layout, 1f);
+		
+		log.info("generationg FruchtermanReingold wait 60\" ");
+		
 		autoLayout.execute();
 
-		export((new Date()).toString() + "-graph1.pdf", workspace, pc);
+		String fileName = (new Date()).toString() + "-graph.pdf";
+		
+		export(fileName , workspace, pc);
 
 		return undirectedGraph;
 	}
 
 	private void appearance(GraphModel graphModel, UndirectedGraph undirectedGraph) {
-		
 		
 		AppearanceController appearanceController = Lookup.getDefault().lookup(AppearanceController.class);
 		AppearanceModel appearanceModel = appearanceController.getModel();
@@ -116,32 +123,14 @@ public class GephiHelper {
 		appearanceController.transform(func);
 	}
 
-	private void export2() {
-
-		ExportController ec = Lookup.getDefault().lookup(ExportController.class);
-
-		try {
-			ec.exportFile(new File("test-full.gexf"));
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			return;
-		}
-		// Export only visible graph
-		GraphExporter exporter = (GraphExporter) ec.getExporter("gexf");
-		// Get GEXF exporter
-		exporter.setExportVisible(true);
-		try {
-			ec.exportFile(new File("test-visible.gexf"), exporter);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			return;
-		}
-
-	}
-
 	private UndirectedGraph loadGraph(GraphModel graphModel, List<Edge> edges) {
+
+		log.info("creating edges " + edges.size());
+
 		UndirectedGraph undirectedGraph = graphModel.getUndirectedGraph();
 
+		statusThread(undirectedGraph);
+		 
 		for (Edge edge : edges) {
 
 			Long sourceId = edge.getSource();
@@ -152,7 +141,7 @@ public class GephiHelper {
 
 			Node source = buildNode(graphModel, sourceCountry);
 			Node target = buildNode(graphModel, targetCountry);
-			undirectedGraph.getNode(targetId);
+
 			try {
 				if (undirectedGraph.getNode(sourceCountry.getId().toString()) == null)
 					undirectedGraph.addNode(source);
@@ -172,6 +161,19 @@ public class GephiHelper {
 
 		}
 		return undirectedGraph;
+	}
+
+	private void statusThread(UndirectedGraph undirectedGraph) {
+		Runnable task3 = () -> {
+			try {
+				Thread.currentThread().sleep(60*1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			log.info("loaded edges: " + undirectedGraph.getEdgeCount());
+		};
+		new Thread(task3).start();
 	}
 
 	public void getGraphTest() {
@@ -226,6 +228,8 @@ public class GephiHelper {
 
 	private void export(String name, Workspace workspace, ProjectController pc) {
 
+		log.info("exporting graph to file " + name);
+		
 		ExportController ec = Lookup.getDefault().lookup(ExportController.class);
 		try {
 			pc.openWorkspace(workspace);

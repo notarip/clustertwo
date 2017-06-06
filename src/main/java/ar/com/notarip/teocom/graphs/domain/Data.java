@@ -1,6 +1,5 @@
 package ar.com.notarip.teocom.graphs.domain;
 
-import javax.persistence.Entity;
 import javax.persistence.Id;
 
 
