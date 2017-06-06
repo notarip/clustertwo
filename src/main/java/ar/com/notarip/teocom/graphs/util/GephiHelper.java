@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.assertj.core.util.Strings;
+import org.assertj.core.util.Strings.StringsToJoin;
 import org.gephi.appearance.api.AppearanceController;
 import org.gephi.appearance.api.AppearanceModel;
 import org.gephi.appearance.api.Function;
@@ -89,6 +91,8 @@ public class GephiHelper {
 		model.getProperties().putValue(PreviewProperty.NODE_LABEL_FONT,
 		model.getProperties().getFontValue(PreviewProperty.NODE_LABEL_FONT).deriveFont(8));
 
+		
+		
 		FruchtermanReingold layout = new FruchtermanReingold(new FruchtermanReingoldBuilder());
 
 		ImportController importController = Lookup.getDefault().lookup(ImportController.class);
@@ -98,6 +102,7 @@ public class GephiHelper {
 		autoLayout.setGraphModel(graphModel);
 
 		autoLayout.addLayout(layout, 1f);
+		
 		
 		log.info("generationg FruchtermanReingold wait 60\" ");
 		
